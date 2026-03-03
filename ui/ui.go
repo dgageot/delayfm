@@ -59,6 +59,7 @@ type Model struct {
 	connecting     bool
 	width          int
 	height         int
+	focused        bool
 }
 
 func New(p *player.Player) Model {
@@ -83,6 +84,7 @@ func New(p *player.Player) Model {
 		nameInput:    name,
 		countryInput: country,
 		player:       p,
+		focused:      true,
 	}
 }
 
@@ -114,7 +116,18 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.height = msg.Height
 		return m, nil
 
+	case tea.FocusMsg:
+		m.focused = true
+		return m, m.tick()
+
+	case tea.BlurMsg:
+		m.focused = false
+		return m, nil
+
 	case tickMsg:
+		if !m.focused {
+			return m, nil
+		}
 		return m, m.tick()
 
 	case tea.KeyPressMsg:
@@ -295,6 +308,7 @@ func (m Model) View() tea.View {
 
 	v := tea.NewView(appMargin.Render(content))
 	v.AltScreen = true
+	v.ReportFocus = true
 	return v
 }
 
